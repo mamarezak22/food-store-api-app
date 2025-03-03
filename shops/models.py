@@ -16,6 +16,7 @@ user = get_user_model()
 class Store(models.Model):
 
     name = models.CharField(max_length = 50,db_index= True)
+    store_type = models.CharField(max_length=15,choices=store_types)
     working_hours = models.ForeignKey('WorkingHours',on_delete=models.PROTECT)
     city = models.ForeignKey('city',related_name='stores',on_delete=models.PROTECT)
     picture = models.ImageField(blank = True,upload_to=store_picture_upload_to)
