@@ -4,8 +4,9 @@ from rest_framework import pagination
 from rest_framework.views import APIView
 
 from django.db.models import Q
-from .models import Store,Food
-from .serializers import StoreListViewSerializer,FoodListViewSerializer
+from .models import Store,Food,FoodComment
+from .serializers import StoreListViewSerializer, FoodListViewSerializer, FoodCommentListViewSerializer
+from .permissions import IsOwnerOrReadOnly
 
 def get_filter_query_params(request,*query_params) -> Q():
     '''get the query params and return the filters should apply
@@ -49,6 +50,38 @@ class FoodListView(APIView):
 
         serializer = FoodListViewSerializer(foods , many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
+
+class FoodCommentListView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_food(self,pk):
+        try :
+            food = Food.objects.filter(pk = pk)
+        except Food.DoesNotExist:
+            return None
+        return food
+    def get(self,request,pk):
+        food = self.get_food(pk)
+        if food:
+            serializer = FoodCommentListViewSerializer(Food.comments , many = True)
+            return Response(serializer.data , status = status.HTTP_200_OK)
+        return Response(status = status.HTTP_404_NOT_FOUND)
+
+    def post(self,request,pk):
+        food = self.get_food(pk)
+        if food:
+            comment = FoodComment.objects.create(data = request.data,user = request.user)
+            location = f'localhost:8000/api/foods/{food.pk}/comments/{comment.pk}'
+            return Response(status = status.HTTP_201_CREATED,
+                            headers= {'location' : location})
+
+
+
+
+
+
+
+
 
 
 
