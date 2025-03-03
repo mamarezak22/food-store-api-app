@@ -78,7 +78,7 @@ class Food(models.Model):
     description = models.TextField()
     image = models.ImageField(upload_to=food_picture_upload_to)
     store = models.ForeignKey('Store',on_delete = models.CASCADE,releated_name = 'foods')
-    categories = models.ManyToManyField('category',related_name='foods')
+    category = models.ForeignKey('category',related_name='foods')
     price = models.IntegerField('in toman')
     discount_rate = models.DecimalField(default = 0,max_digits=3,decimal_places=2)
     # like 0.9 for 90 percent.
@@ -108,6 +108,12 @@ class Food(models.Model):
         query = self.comments.exclude(star = None).aggregate(avg_star = Avg('star'))
         avg_star = query['avg_star']
         return avg_star
+
+    @property
+    def final_price(self):
+        if self.has_discount :
+            return self.price - (self.price * self.discount_rate)
+        return self.price
 
 
 
