@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
-from .uploads import store_picture_upload_to
+from .uploads import store_picture_upload_to,food_picture_upload_to
 from .managers import OpenStoreManager
 from .categories import store_types
 
@@ -17,7 +17,7 @@ class Store(models.Model):
 
     name = models.CharField(max_length = 50,db_index= True)
     store_type = models.CharField(max_length=15,choices=store_types)
-    working_hours = models.ForeignKey('WorkingHours',on_delete=models.PROTECT)
+    working_hours = models.ForeignKey('StoreWorkingHour',on_delete=models.PROTECT)
     city = models.ForeignKey('city',related_name='stores',on_delete=models.PROTECT)
     picture = models.ImageField(blank = True,upload_to=store_picture_upload_to)
     post_service_price = models.PositiveIntegerField(help_text = "in toman")
@@ -28,6 +28,9 @@ class Store(models.Model):
     class Meta:
         db_table = 'stores'
         unique_togather = ['name','city']
+
+    def __str__(self):
+        return self.name
 
     @property
     def is_store_open(self):
@@ -44,6 +47,7 @@ class Store(models.Model):
         if self.post_service_price == 0:
             return True
         return False
+    
     @property
     def star(self):
        query = FoodComment.objects.filter(food__store = self).exclude(star = None).aggregate(avg_star = Avg('star'))
@@ -51,11 +55,7 @@ class Store(models.Model):
        return round(avg_star,2)
 
 
-
-    def __str__(self):
-        return self.name
-
-class WorkingHours(models.Model):
+class StoreWorkingHour(models.Model):
     start_time = models.IntegerField(validators=[MaxValueValidator(24),MinValueValidator(0)])
     end_time = models.IntegerField(validators=[MaxValueValidator(24),MinValueValidator(0)])
 
@@ -76,13 +76,17 @@ class WorkingHours(models.Model):
 class Food(models.Model):
     name = models.CharField(max_length= 50,db_index=True)
     description = models.TextField()
+    image = models.ImageField(upload_to=food_picture_upload_to)
     store = models.ForeignKey('Store',on_delete = models.CASCADE,releated_name = 'foods')
-    category = models.ManyToManyField('category',related_name='foods')
+    categories = models.ManyToManyField('category',related_name='foods')
     price = models.IntegerField('in toman')
     discount_rate = models.DecimalField(default = 0,max_digits=3,decimal_places=2)
     # like 0.9 for 90 percent.
     counts = models.IntegerField(default=0)
     sold_unit = models.IntegerField('count of that food that been saled',default=0)
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         unique_togather = ['name','store']
@@ -106,8 +110,7 @@ class Food(models.Model):
         return avg_star
 
 
-    def __str__(self):
-        return self.name
+
 
 class Category(models.Model):
     parent = models.ForeignKey('self',related_name='sub_categories',on_delete=models.PROTECT,blank=True,null=True)
@@ -123,6 +126,10 @@ class FoodComment(models.Model):
     user = models.ForeignKey(user, on_delete=models.SET_NULL, related_name='user_food_comments')
     content = models.TextField()
     star = models.IntegerField(validators=[MaxValueValidator(5), MinValueValidator(0)], blank=True, null=True)
+
+    def __str__(self):
+        return self.content
+
     class Meta:
         unique_togather = ['user','food']
 
