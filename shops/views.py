@@ -27,7 +27,7 @@ class StoreListView(APIView):
         if search is not None:
             filters &= Q(name__icontains = request.query_params['search'])
 
-        stores = Store.objects.filter(filters)
+        stores = Store.objects.filter(filters,is_active = True)
 
         paginator = pagination.PageNumberPagination()
         paginator.page_size = request.query_params.get('page_size', 10)  # Default page size is 10
@@ -47,7 +47,7 @@ class FoodListView(APIView):
         else:
             foods = Food.objects.filter(filters)
 
-        serializer = FoodListViewSerilizer(foods , many = True)
+        serializer = FoodListViewSerializer(foods , many = True)
         return Response(serializer.data,status = status.HTTP_200_OK)
 
 

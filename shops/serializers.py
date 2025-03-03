@@ -1,5 +1,20 @@
 from rest_framework import serializers
-from .models import Store, Food
+from .models import Store, Food,StoreWorkingHour,Category,FoodComment,City
+
+class WorkingHourSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoreWorkingHour
+        fields = "__all__"
+
+class CategorySeriliazer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('name',)
+
+class CitySeriliazer(serializers.ModelSerializer):
+    class Meta:
+        model =
+
 
 class StoreListViewSerializer(serializers.ModelSerializer):
     class Meta:

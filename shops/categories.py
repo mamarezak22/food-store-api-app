@@ -1,5 +1,5 @@
 store_types = (
-    ('resturant', 'Resturant'),
+    ('restaurant', 'Restaurant'),
     ('supermarket','SuperMarket'),
     ('coffee','Coffee'),
 )
